@@ -53,7 +53,7 @@ export default function BadgePage() {
                 />
               </div>
               <p className="text-xl text-white font-normal text-center pt-10">
-                Complete the joumey, collect them all, and win the prize!
+                Complete the journey, collect them all, and win the prize
               </p>
               <div className="flex justify-center mt-5">
                 <Button
