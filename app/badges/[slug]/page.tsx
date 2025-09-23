@@ -38,8 +38,8 @@ export default function BadgePage() {
               YOU ARE IN!
             </h1>
             <p className="text-xl  text-white font-normal text-center pt-10 pb-10">
-              Scan the QR at each station to unlock your Tech Passport and
-              collect your journey stamps!
+              Scan the QR code at each zone and collect the victory stamps on
+              your digital passport.
             </p>
 
             <div className="flex justify-center flex-col">
@@ -53,7 +53,7 @@ export default function BadgePage() {
                 />
               </div>
               <p className="text-xl text-white font-normal text-center pt-10">
-                See you on the journey!
+                Complete the joumey, collect them all, and win the prize!
               </p>
               <div className="flex justify-center mt-5">
                 <Button
