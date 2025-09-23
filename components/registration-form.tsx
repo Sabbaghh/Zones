@@ -1,3 +1,5 @@
+// --- registration-form.tsx
+
 'use client';
 
 import type React from 'react';
@@ -15,6 +17,9 @@ import {
 } from '@/components/ui/select';
 import countryCodes from '@/data/countrycodes';
 // Country codes for phone validation
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 interface FormData {
   fullName: string;
@@ -39,6 +44,7 @@ interface TouchedFields {
 }
 
 export default function RegistrationForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     company: '',
@@ -56,6 +62,15 @@ export default function RegistrationForm() {
     phoneNumber: false,
   });
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Check for existing UUID in cookies on mount
+  useEffect(() => {
+    const uuid = Cookies.get('uuid');
+    if (uuid) {
+      router.push(`/badges/${uuid}`);
+    }
+  }, [router]);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -179,15 +194,35 @@ export default function RegistrationForm() {
     handleInputChange('phoneNumber', value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasAttemptedSubmit(true);
 
     const allErrors = validateAllFields();
     if (Object.keys(allErrors).length === 0) {
-      console.log('Form submitted:', formData);
-      // Handle form submission here
-      alert('Registration submitted successfully!');
+      setIsLoading(true);
+      try {
+        const response = await axios.post(
+          'https://zonecheck.up.railway.app/api/register',
+          {
+            name: formData.fullName,
+            email: formData.email,
+            phone: `${formData.countryCode}${formData.phoneNumber}`,
+            company: formData.company,
+          },
+        );
+        const data = response.data.data;
+        if (data.uuid) {
+          Cookies.set('uuid', data.uuid);
+          router.push(`/badges/${data.uuid}`);
+        }
+      } catch (error) {
+        console.error('Registration failed:', error);
+        // Optionally, set a global error message here
+        alert('Registration failed. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       // Show all errors when form is submitted with invalid data
       setErrors(allErrors);
@@ -195,7 +230,12 @@ export default function RegistrationForm() {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-lg mx-auto border border-white/20">
+    <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-lg mx-auto border border-white/20 relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-3xl z-20">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      )}
       <div className="mb-8">
         <h3 className="text-white text-2xl font-bold mb-2">Registration</h3>
         <div className="w-12 h-1 bg-green-400 rounded"></div>
@@ -323,14 +363,14 @@ export default function RegistrationForm() {
         {/* Submit Button */}
         <Button
           type="submit"
-          disabled={!isValid}
+          disabled={!isValid || isLoading}
           className={`w-full py-3 rounded-full font-semibold text-lg transition-all duration-200 ${
-            isValid
+            isValid && !isLoading
               ? 'bg-green-400 hover:bg-green-500 text-black'
               : 'bg-gray-400 text-gray-600 cursor-not-allowed'
           }`}
         >
-          Submit
+          {isLoading ? 'Submitting...' : 'Submit'}
         </Button>
       </form>
     </div>
