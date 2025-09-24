@@ -47,8 +47,8 @@ export default function BadgePage() {
                 <QRCode
                   value={uuid}
                   size={200}
-                  fgColor="#FFFFFF"
-                  bgColor="transparent"
+                  fgColor="#000"
+                  bgColor="#fff"
                   className="mx-auto"
                 />
               </div>
