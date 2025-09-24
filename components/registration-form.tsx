@@ -3,20 +3,10 @@
 'use client';
 
 import type React from 'react';
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import countryCodes from '@/data/countrycodes';
-// Country codes for phone validation
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -25,22 +15,18 @@ interface FormData {
   fullName: string;
   company: string;
   email: string;
-  phoneNumber: string;
-  countryCode: string;
 }
 
 interface FormErrors {
   fullName?: string;
   company?: string;
   email?: string;
-  phoneNumber?: string;
 }
 
 interface TouchedFields {
   fullName: boolean;
   company: boolean;
   email: boolean;
-  phoneNumber: boolean;
 }
 
 export default function RegistrationForm() {
@@ -49,8 +35,6 @@ export default function RegistrationForm() {
     fullName: '',
     company: '',
     email: '',
-    phoneNumber: '',
-    countryCode: '+971', // Default to UAE
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -59,7 +43,6 @@ export default function RegistrationForm() {
     fullName: false,
     company: false,
     email: false,
-    phoneNumber: false,
   });
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,9 +57,6 @@ export default function RegistrationForm() {
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  // Phone number validation (basic - digits only, 7-15 characters)
-  const phoneRegex = /^\d{7,15}$/;
 
   // Validate individual fields
   const validateField = (name: string, value: string): string | undefined => {
@@ -97,12 +77,6 @@ export default function RegistrationForm() {
         if (!value.trim()) return 'Email is required';
         if (!emailRegex.test(value))
           return 'Please enter a valid email address';
-        return undefined;
-
-      case 'phoneNumber':
-        if (!value.trim()) return 'Phone number is required';
-        if (!phoneRegex.test(value.replace(/\s/g, '')))
-          return 'Please enter a valid phone number';
         return undefined;
 
       default:
@@ -135,15 +109,13 @@ export default function RegistrationForm() {
 
     // Validate all fields
     Object.keys(formData).forEach((key) => {
-      if (key !== 'countryCode') {
-        const error = validateField(key, formData[key as keyof FormData]);
-        // Only show error if field has been touched or form submission was attempted
-        if (
-          error &&
-          (touchedFields[key as keyof TouchedFields] || hasAttemptedSubmit)
-        ) {
-          newErrors[key as keyof FormErrors] = error;
-        }
+      const error = validateField(key, formData[key as keyof FormData]);
+      // Only show error if field has been touched or form submission was attempted
+      if (
+        error &&
+        (touchedFields[key as keyof TouchedFields] || hasAttemptedSubmit)
+      ) {
+        newErrors[key as keyof FormErrors] = error;
       }
     });
 
@@ -152,71 +124,19 @@ export default function RegistrationForm() {
       Object.keys(validateAllFields()).length === 0 &&
         formData.fullName.trim() !== '' &&
         formData.company.trim() !== '' &&
-        formData.email.trim() !== '' &&
-        formData.phoneNumber.trim() !== '',
+        formData.email.trim() !== '',
     );
   }, [formData, touchedFields, hasAttemptedSubmit]);
 
   const validateAllFields = (): FormErrors => {
     const allErrors: FormErrors = {};
     Object.keys(formData).forEach((key) => {
-      if (key !== 'countryCode') {
-        const error = validateField(key, formData[key as keyof FormData]);
-        if (error) {
-          allErrors[key as keyof FormErrors] = error;
-        }
+      const error = validateField(key, formData[key as keyof FormData]);
+      if (error) {
+        allErrors[key as keyof FormErrors] = error;
       }
     });
     return allErrors;
-  };
-
-  // Auto-detect country code based on phone number (updated to find longest match)
-  const detectCountryFromPhone = (phoneNumber: string) => {
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
-    if (!cleanPhone) return formData.countryCode;
-
-    // Sort by code length descending to prioritize longest matches
-    const sortedCountries = [...countryCodes].sort(
-      (a, b) => b.code.replace('+', '').length - a.code.replace('+', '').length,
-    );
-
-    for (const country of sortedCountries) {
-      const code = country.code.replace('+', '');
-      if (cleanPhone.startsWith(code)) {
-        return country.code;
-      }
-    }
-
-    return formData.countryCode; // Keep current if no match
-  };
-
-  // Handle phone number input with conditional auto country detection (updated per request)
-  const handlePhoneChange = (value: string) => {
-    let newCountryCode = formData.countryCode;
-    let newPhoneNumber = value;
-
-    // Only detect/change if input starts with '+'
-    if (value.startsWith('+')) {
-      const detected = detectCountryFromPhone(value);
-      newCountryCode = detected;
-
-      // Strip the detected code digits to avoid duplication in final phone
-      const cleanPhone = value.replace(/\D/g, '');
-      const codeLength = detected.replace('+', '').length;
-      newPhoneNumber = cleanPhone.slice(codeLength);
-    }
-
-    // Update form data
-    setFormData((prev) => ({
-      ...prev,
-      countryCode: newCountryCode,
-      phoneNumber: newPhoneNumber,
-    }));
-
-    // Clear error if present (mimics handleInputChange behavior)
-    if (errors.phoneNumber) {
-      setErrors((prev) => ({ ...prev, phoneNumber: undefined }));
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -232,7 +152,6 @@ export default function RegistrationForm() {
           {
             name: formData.fullName,
             email: formData.email,
-            phone: `${formData.countryCode}${formData.phoneNumber}`,
             company: formData.company,
           },
         );
@@ -243,7 +162,6 @@ export default function RegistrationForm() {
         }
       } catch (error) {
         console.error('Registration failed:', error);
-        // Optionally, set a global error message here
         alert('Registration failed. Please try again.');
       } finally {
         setIsLoading(false);
@@ -336,52 +254,6 @@ export default function RegistrationForm() {
           />
           {errors.email && (
             <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Phone Number */}
-        <div>
-          <Label
-            htmlFor="phoneNumber"
-            className="text-green-400 font-medium mb-2 block"
-          >
-            Phone number
-          </Label>
-          <div className="flex gap-2">
-            <Select
-              value={formData.countryCode}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, countryCode: value }))
-              }
-            >
-              <SelectTrigger className="w-24 bg-white/90 border-0 rounded-lg">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {countryCodes.map((country) => (
-                  <SelectItem key={country.country} value={country.code}>
-                    <span className="flex items-center gap-2">
-                      <span>{country.flag}</span>
-                      <span>{country.code}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              id="phoneNumber"
-              type="tel"
-              placeholder="Phone number..."
-              value={formData.phoneNumber}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              onBlur={() => handleFieldBlur('phoneNumber')}
-              className={`flex-1 bg-white/90 border-0 rounded-lg px-4 py-3 text-gray-800 placeholder:text-gray-500 ${
-                errors.phoneNumber ? 'ring-2 ring-red-400' : ''
-              }`}
-            />
-          </div>
-          {errors.phoneNumber && (
-            <p className="text-red-400 text-sm mt-1">{errors.phoneNumber}</p>
           )}
         </div>
 

@@ -17,7 +17,7 @@ type AttendeeData = {
 };
 
 export default function BadgePage() {
-  const REFRESH_INTERVAL = 180; // seconds
+  const REFRESH_INTERVAL = 60; // seconds
   const params = useParams();
   const uuid = params.slug; // This is your UUID from the URL
   const router = useRouter();
@@ -93,7 +93,7 @@ export default function BadgePage() {
                     TECHNOLOGY HUNT PASS
                   </h1>
                   <div className="grid grid-cols-2 gap-5 bg-[url('/stampsbg.png')] min-h-100 rounded-md bg-cover bg-center bg-white px-5 py-5 justify-center items-start relative mt-5">
-                    <div className="absolute bg-[rgba(0,0,0,0.5)] w-0.5 h-2/3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bg-[rgba(0,0,0,0.4)] w-0.5 h-[90%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
                     {data?.visits?.map((visit, index) => (
                       <>
                         <div key={index} className="flex justify-center">

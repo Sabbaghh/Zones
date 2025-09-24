@@ -43,13 +43,12 @@ export default function BadgePage() {
             </p>
 
             <div className="flex justify-center flex-col">
-              <div>
+              <div className="self-center bg-white p-2 flex items-center justify-center">
                 <QRCode
                   value={uuid}
                   size={200}
-                  fgColor="#000"
+                  fgColor="#052392"
                   bgColor="#fff"
-                  className="mx-auto"
                 />
               </div>
               <p className="text-xl text-white font-normal text-center pt-10">
