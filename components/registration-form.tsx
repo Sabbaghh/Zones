@@ -170,12 +170,17 @@ export default function RegistrationForm() {
     return allErrors;
   };
 
-  // Auto-detect country code based on phone number
+  // Auto-detect country code based on phone number (updated to find longest match)
   const detectCountryFromPhone = (phoneNumber: string) => {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (!cleanPhone) return formData.countryCode;
 
-    // Check for common country code patterns
-    for (const country of countryCodes) {
+    // Sort by code length descending to prioritize longest matches
+    const sortedCountries = [...countryCodes].sort(
+      (a, b) => b.code.replace('+', '').length - a.code.replace('+', '').length,
+    );
+
+    for (const country of sortedCountries) {
       const code = country.code.replace('+', '');
       if (cleanPhone.startsWith(code)) {
         return country.code;
@@ -185,13 +190,33 @@ export default function RegistrationForm() {
     return formData.countryCode; // Keep current if no match
   };
 
-  // Handle phone number input with auto country detection
+  // Handle phone number input with conditional auto country detection (updated per request)
   const handlePhoneChange = (value: string) => {
-    const detectedCountry = detectCountryFromPhone(value);
-    if (detectedCountry !== formData.countryCode) {
-      setFormData((prev) => ({ ...prev, countryCode: detectedCountry }));
+    let newCountryCode = formData.countryCode;
+    let newPhoneNumber = value;
+
+    // Only detect/change if input starts with '+'
+    if (value.startsWith('+')) {
+      const detected = detectCountryFromPhone(value);
+      newCountryCode = detected;
+
+      // Strip the detected code digits to avoid duplication in final phone
+      const cleanPhone = value.replace(/\D/g, '');
+      const codeLength = detected.replace('+', '').length;
+      newPhoneNumber = cleanPhone.slice(codeLength);
     }
-    handleInputChange('phoneNumber', value);
+
+    // Update form data
+    setFormData((prev) => ({
+      ...prev,
+      countryCode: newCountryCode,
+      phoneNumber: newPhoneNumber,
+    }));
+
+    // Clear error if present (mimics handleInputChange behavior)
+    if (errors.phoneNumber) {
+      setErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

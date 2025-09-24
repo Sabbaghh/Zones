@@ -38,6 +38,8 @@ const helveticaNeueLTArabic = localFont({
 export const metadata: Metadata = {
   title: 'Zones Tech Passport',
   description: '',
+  // Add this for Android/Chrome status bar color (use any valid CSS color, e.g., hex, rgb, or named)
+  themeColor: '#0021B0', // Example: black; replace with your desired color
 };
 
 export default function RootLayout({
@@ -47,6 +49,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* Optional: For iOS, add this meta tag in a <head> element to influence status bar style
+                  (options: 'default' for white with black text, 'black' for black with white text,
+                  or 'black-translucent' for translucent black). This works best for PWAs. */}
+      <head>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+      </head>
       <body
         className={`$ ${adnocSans.variable} ${helveticaNeueLTArabic.variable} antialiased`}
       >

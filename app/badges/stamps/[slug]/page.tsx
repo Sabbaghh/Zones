@@ -110,7 +110,8 @@ export default function BadgePage() {
                 </>
               ) : (
                 <div className="text-center text-white text-2xl mt-10">
-                  No stamps exist yet
+                  Start your journey! Collect your first stamp by visiting a
+                  station.
                 </div>
               )}
               <div className="mt-5">
