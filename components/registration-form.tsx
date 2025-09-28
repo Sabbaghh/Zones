@@ -158,7 +158,7 @@ export default function RegistrationForm() {
         const data = response.data.data;
         if (data.uuid) {
           Cookies.set('uuid', data.uuid, { expires: 7 });
-          router.push(`/badges/${data.uuid}`);
+          router.push(`/badges`);
         }
       } catch (error) {
         console.error('Registration failed:', error);
