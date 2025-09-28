@@ -1,10 +1,11 @@
 'use client';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 type Visit = {
   zone: string;
@@ -18,14 +19,24 @@ type AttendeeData = {
 
 export default function BadgePage() {
   const REFRESH_INTERVAL = 60; // seconds
-  const params = useParams();
-  const uuid = params.slug; // This is your UUID from the URL
   const router = useRouter();
+  const [uuid, setUuid] = useState<string | undefined>(undefined);
   const [data, setData] = useState<AttendeeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [remaining, setRemaining] = useState(REFRESH_INTERVAL);
 
   useEffect(() => {
+    const cookieUuid = Cookies.get('uuid');
+    if (!cookieUuid) {
+      router.push('/');
+      return;
+    }
+    setUuid(cookieUuid);
+  }, [router]);
+
+  useEffect(() => {
+    if (!uuid) return;
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -34,8 +45,13 @@ export default function BadgePage() {
         );
         setData(response.data.data);
       } catch (error) {
-        console.error('Failed to fetch attendee data:', error);
-        setData({ visits: [] });
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          Cookies.remove('uuid');
+          router.push('/');
+        } else {
+          console.error('Failed to fetch attendee data:', error);
+          setData({ visits: [] });
+        }
       } finally {
         setIsLoading(false);
         setRemaining(REFRESH_INTERVAL);
@@ -44,7 +60,7 @@ export default function BadgePage() {
     fetchData();
     const interval = setInterval(fetchData, REFRESH_INTERVAL * 1000);
     return () => clearInterval(interval);
-  }, [uuid]);
+  }, [uuid, router]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -57,7 +73,10 @@ export default function BadgePage() {
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 
-  // Fetch data or render based on uuid...
+  if (uuid === undefined) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-[url('/bg.png')] bg-cover bg-top bg-no-repeat relative overflow-hidden">
       <div className="relative z-10 container mx-auto px-8 py-8">
@@ -127,7 +146,7 @@ export default function BadgePage() {
               <div className="flex justify-center mt-5">
                 <Button
                   className="py-5 w-1/2 items-center bg-[#74F9A1] text-[#0E3CDF] font-bold hover:bg-[#a8f6c2]"
-                  onClick={() => router.push(`/badges/${uuid}`)}
+                  onClick={() => router.push(`/badges`)}
                 >
                   VIEW YOUR BADGE
                 </Button>

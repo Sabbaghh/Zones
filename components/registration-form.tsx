@@ -51,7 +51,7 @@ export default function RegistrationForm() {
   useEffect(() => {
     const uuid = Cookies.get('uuid');
     if (uuid) {
-      router.push(`/badges/${uuid}`);
+      router.push(`/badges`);
     }
   }, [router]);
 
